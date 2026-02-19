@@ -19,7 +19,7 @@
 	style="background-color: var(--color-surface); border-color: var(--color-border)"
 >
 	<div class="flex items-center gap-2 pl-10 md:pl-0">
-		{#each breadcrumbs as crumb, i}
+		{#each breadcrumbs as crumb, i (i)}
 			{#if i > 0}
 				<span style="color: var(--color-text-muted)">/</span>
 			{/if}

@@ -10,10 +10,10 @@
 	} = $props();
 
 	function handleExport() {
-		const params = new URLSearchParams({ type });
-		if (from) params.set('from', from);
-		if (to) params.set('to', to);
-		window.open(`/api/export?${params}`, '_blank');
+		const parts = [`type=${encodeURIComponent(type)}`];
+		if (from) parts.push(`from=${encodeURIComponent(from)}`);
+		if (to) parts.push(`to=${encodeURIComponent(to)}`);
+		window.open(`/api/export?${parts.join('&')}`, '_blank');
 	}
 </script>
 

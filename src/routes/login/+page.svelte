@@ -10,7 +10,10 @@
 	<title>Login — SvelteFlow</title>
 </svelte:head>
 
-<div class="flex min-h-screen items-center justify-center" style="background-color: var(--color-bg)">
+<div
+	class="flex min-h-screen items-center justify-center"
+	style="background-color: var(--color-bg)"
+>
 	<div
 		class="w-full max-w-md rounded-xl p-8 shadow-lg"
 		style="background-color: var(--color-surface); border: 1px solid var(--color-border)"
@@ -40,11 +43,7 @@
 			}}
 		>
 			<div class="mb-4">
-				<label
-					for="email"
-					class="mb-1 block text-sm font-medium"
-					style="color: var(--color-text)"
-				>
+				<label for="email" class="mb-1 block text-sm font-medium" style="color: var(--color-text)">
 					Email
 				</label>
 				<input

@@ -18,7 +18,13 @@ export function baseLineOptions(isDark: boolean): ChartOptions<'line'> {
 		interaction: { intersect: false, mode: 'index' },
 		plugins: {
 			legend: { labels: { color: colors.text } },
-			tooltip: { backgroundColor: isDark ? '#1e293b' : '#ffffff', titleColor: isDark ? '#f1f5f9' : '#0f172a', bodyColor: isDark ? '#cbd5e1' : '#334155', borderColor: isDark ? '#475569' : '#e2e8f0', borderWidth: 1 }
+			tooltip: {
+				backgroundColor: isDark ? '#1e293b' : '#ffffff',
+				titleColor: isDark ? '#f1f5f9' : '#0f172a',
+				bodyColor: isDark ? '#cbd5e1' : '#334155',
+				borderColor: isDark ? '#475569' : '#e2e8f0',
+				borderWidth: 1
+			}
 		},
 		scales: {
 			x: { grid: { color: colors.grid }, ticks: { color: colors.text } },
@@ -34,7 +40,13 @@ export function baseBarOptions(isDark: boolean): ChartOptions<'bar'> {
 		maintainAspectRatio: false,
 		plugins: {
 			legend: { labels: { color: colors.text } },
-			tooltip: { backgroundColor: isDark ? '#1e293b' : '#ffffff', titleColor: isDark ? '#f1f5f9' : '#0f172a', bodyColor: isDark ? '#cbd5e1' : '#334155', borderColor: isDark ? '#475569' : '#e2e8f0', borderWidth: 1 }
+			tooltip: {
+				backgroundColor: isDark ? '#1e293b' : '#ffffff',
+				titleColor: isDark ? '#f1f5f9' : '#0f172a',
+				bodyColor: isDark ? '#cbd5e1' : '#334155',
+				borderColor: isDark ? '#475569' : '#e2e8f0',
+				borderWidth: 1
+			}
 		},
 		scales: {
 			x: { grid: { color: colors.grid }, ticks: { color: colors.text } },
@@ -50,7 +62,13 @@ export function basePieOptions(isDark: boolean): ChartOptions<'pie'> {
 		maintainAspectRatio: false,
 		plugins: {
 			legend: { position: 'bottom', labels: { color: colors.text, padding: 16 } },
-			tooltip: { backgroundColor: isDark ? '#1e293b' : '#ffffff', titleColor: isDark ? '#f1f5f9' : '#0f172a', bodyColor: isDark ? '#cbd5e1' : '#334155', borderColor: isDark ? '#475569' : '#e2e8f0', borderWidth: 1 }
+			tooltip: {
+				backgroundColor: isDark ? '#1e293b' : '#ffffff',
+				titleColor: isDark ? '#f1f5f9' : '#0f172a',
+				bodyColor: isDark ? '#cbd5e1' : '#334155',
+				borderColor: isDark ? '#475569' : '#e2e8f0',
+				borderWidth: 1
+			}
 		}
 	};
 }
@@ -63,7 +81,13 @@ export function baseDoughnutOptions(isDark: boolean): ChartOptions<'doughnut'> {
 		cutout: '60%',
 		plugins: {
 			legend: { position: 'bottom', labels: { color: colors.text, padding: 16 } },
-			tooltip: { backgroundColor: isDark ? '#1e293b' : '#ffffff', titleColor: isDark ? '#f1f5f9' : '#0f172a', bodyColor: isDark ? '#cbd5e1' : '#334155', borderColor: isDark ? '#475569' : '#e2e8f0', borderWidth: 1 }
+			tooltip: {
+				backgroundColor: isDark ? '#1e293b' : '#ffffff',
+				titleColor: isDark ? '#f1f5f9' : '#0f172a',
+				bodyColor: isDark ? '#cbd5e1' : '#334155',
+				borderColor: isDark ? '#475569' : '#e2e8f0',
+				borderWidth: 1
+			}
 		}
 	};
 }

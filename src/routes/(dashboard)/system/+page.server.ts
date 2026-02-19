@@ -1,7 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { metrics } from '$lib/server/schema';
-import { sql, desc, gte, eq } from 'drizzle-orm';
+import { sql, desc, eq } from 'drizzle-orm';
 
 export const load: PageServerLoad = async () => {
 	const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();

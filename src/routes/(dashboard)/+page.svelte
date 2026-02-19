@@ -43,7 +43,7 @@
 	<h1 class="text-2xl font-bold" style="color: var(--color-text)">Overview</h1>
 
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-		{#each data.kpis as kpi}
+		{#each data.kpis as kpi (kpi.label)}
 			<StatCard label={kpi.label} value={kpi.value} trend={kpi.trend} />
 		{/each}
 	</div>

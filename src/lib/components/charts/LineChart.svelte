@@ -1,10 +1,29 @@
 <script lang="ts">
-	import { Chart, LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler } from 'chart.js';
+	import {
+		Chart,
+		LineController,
+		LineElement,
+		PointElement,
+		LinearScale,
+		CategoryScale,
+		Tooltip,
+		Legend,
+		Filler
+	} from 'chart.js';
 	import { themeStore } from '$lib/stores/theme.svelte';
-	import { baseLineOptions, getChartColors } from '$lib/utils/chart-options';
+	import { baseLineOptions } from '$lib/utils/chart-options';
 	import type { ChartData, ChartOptions } from 'chart.js';
 
-	Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler);
+	Chart.register(
+		LineController,
+		LineElement,
+		PointElement,
+		LinearScale,
+		CategoryScale,
+		Tooltip,
+		Legend,
+		Filler
+	);
 
 	let {
 		data,

@@ -67,13 +67,10 @@
 		<table class="w-full text-sm">
 			<thead>
 				<tr style="border-bottom: 1px solid var(--color-border)">
-					{#each columns as col}
+					{#each columns as col (col.key)}
 						<th class="px-4 py-3 text-left font-medium" style="color: var(--color-text-muted)">
 							{#if col.sortable !== false}
-								<button
-									class="flex items-center gap-1"
-									onclick={() => toggleSort(col.key)}
-								>
+								<button class="flex items-center gap-1" onclick={() => toggleSort(col.key)}>
 									{col.label}
 									{#if sortKey === col.key}
 										<span class="text-xs">{sortDir === 'asc' ? '▲' : '▼'}</span>
@@ -87,12 +84,9 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each pagedRows as row}
-					<tr
-						class="transition-colors"
-						style="border-bottom: 1px solid var(--color-border)"
-					>
-						{#each columns as col}
+				{#each pagedRows as row, i (i)}
+					<tr class="transition-colors" style="border-bottom: 1px solid var(--color-border)">
+						{#each columns as col (col.key)}
 							<td class="px-4 py-3" style="color: var(--color-text)">{row[col.key]}</td>
 						{/each}
 					</tr>

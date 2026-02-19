@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { Chart, BarController, BarElement, LinearScale, CategoryScale, Tooltip, Legend } from 'chart.js';
+	import {
+		Chart,
+		BarController,
+		BarElement,
+		LinearScale,
+		CategoryScale,
+		Tooltip,
+		Legend
+	} from 'chart.js';
 	import { themeStore } from '$lib/stores/theme.svelte';
 	import { baseBarOptions } from '$lib/utils/chart-options';
 	import type { ChartData, ChartOptions } from 'chart.js';

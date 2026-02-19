@@ -9,7 +9,7 @@ const METRICS = [
 ];
 
 export const GET: RequestHandler = async ({ request }) => {
-	let lastValues: Record<string, number> = {};
+	const lastValues: Record<string, number> = {};
 	for (const m of METRICS) {
 		lastValues[m.name] = m.base;
 	}

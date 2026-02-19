@@ -1,4 +1,5 @@
-import { hashSync, compareSync } from 'bcryptjs';
+import pkg from 'bcryptjs';
+const { hashSync, compareSync } = pkg;
 import { randomUUID } from 'crypto';
 import { db } from './db';
 import { users, sessions } from './schema';

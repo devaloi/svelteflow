@@ -17,19 +17,19 @@ An analytics dashboard built with SvelteKit — SSR with streaming, real-time da
 
 ## Tech Stack
 
-| Component | Choice |
-|-----------|--------|
-| Framework | SvelteKit + Svelte 5 |
-| Language | TypeScript (strict mode) |
-| Database | SQLite (better-sqlite3) |
-| ORM | Drizzle ORM + Drizzle Kit |
-| Charts | Chart.js 4 |
-| Styling | Tailwind CSS 4 |
-| Auth | Custom cookie-based (bcrypt) |
-| Real-time | Server-Sent Events |
-| Unit Tests | Vitest |
-| E2E Tests | Playwright |
-| Linting | ESLint + Prettier |
+| Component  | Choice                       |
+| ---------- | ---------------------------- |
+| Framework  | SvelteKit + Svelte 5         |
+| Language   | TypeScript (strict mode)     |
+| Database   | SQLite (better-sqlite3)      |
+| ORM        | Drizzle ORM + Drizzle Kit    |
+| Charts     | Chart.js 4                   |
+| Styling    | Tailwind CSS 4               |
+| Auth       | Custom cookie-based (bcrypt) |
+| Real-time  | Server-Sent Events           |
+| Unit Tests | Vitest                       |
+| E2E Tests  | Playwright                   |
+| Linting    | ESLint + Prettier            |
 
 ## Quick Start
 
@@ -53,12 +53,12 @@ Open [http://localhost:5173](http://localhost:5173) and log in with:
 
 ## Dashboard Pages
 
-| Page | Route | Description |
-|------|-------|-------------|
-| Overview | `/` | KPI cards, revenue trend, activity by type |
-| Sales | `/sales` | Revenue by product, monthly trends, top customers with date filtering |
-| Users | `/users` | Signups over time, demographics, retention, customer growth |
-| System | `/system` | Live CPU/memory charts via SSE, error rates, active users |
+| Page     | Route     | Description                                                           |
+| -------- | --------- | --------------------------------------------------------------------- |
+| Overview | `/`       | KPI cards, revenue trend, activity by type                            |
+| Sales    | `/sales`  | Revenue by product, monthly trends, top customers with date filtering |
+| Users    | `/users`  | Signups over time, demographics, retention, customer growth           |
+| System   | `/system` | Live CPU/memory charts via SSE, error rates, active users             |
 
 ## Architecture
 

@@ -46,10 +46,10 @@
 	];
 
 	function handleExport() {
-		const params = new URLSearchParams({ type: 'sales' });
-		if (fromDate) params.set('from', fromDate);
-		if (toDate) params.set('to', toDate);
-		window.open(`/api/export?${params}`, '_blank');
+		const parts = ['type=sales'];
+		if (fromDate) parts.push(`from=${encodeURIComponent(fromDate)}`);
+		if (toDate) parts.push(`to=${encodeURIComponent(toDate)}`);
+		window.open(`/api/export?${parts.join('&')}`, '_blank');
 	}
 </script>
 
@@ -67,10 +67,11 @@
 			class="flex flex-wrap items-center gap-3"
 			use:enhance={() => {
 				return async () => {
-					const params = new URLSearchParams();
-					if (fromDate) params.set('from', fromDate);
-					if (toDate) params.set('to', toDate);
-					goto(`/sales?${params}`, { invalidateAll: true });
+					const parts: string[] = [];
+					if (fromDate) parts.push(`from=${encodeURIComponent(fromDate)}`);
+					if (toDate) parts.push(`to=${encodeURIComponent(toDate)}`);
+					const qs = parts.length ? `?${parts.join('&')}` : '';
+					await goto(`/sales${qs}`, { invalidateAll: true });
 				};
 			}}
 		>

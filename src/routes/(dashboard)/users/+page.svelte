@@ -39,7 +39,10 @@
 		datasets: [
 			{
 				data: data.roleBreakdown.map((r) => r.value),
-				backgroundColor: getChartColors(themeStore.isDark).datasets.slice(0, data.roleBreakdown.length)
+				backgroundColor: getChartColors(themeStore.isDark).datasets.slice(
+					0,
+					data.roleBreakdown.length
+				)
 			}
 		]
 	});
@@ -74,9 +77,7 @@
 		</ChartContainer>
 
 		<div>
-			<h2 class="mb-3 text-lg font-semibold" style="color: var(--color-text)">
-				Customer Growth
-			</h2>
+			<h2 class="mb-3 text-lg font-semibold" style="color: var(--color-text)">Customer Growth</h2>
 			<DataTable columns={growthColumns} rows={data.customerGrowth} />
 		</div>
 	</div>

@@ -47,13 +47,11 @@
 	style="background-color: var(--color-surface); border-color: var(--color-border)"
 >
 	<div class="flex h-16 items-center px-6">
-		<a href="/" class="text-xl font-bold" style="color: var(--color-primary)">
-			📈 SvelteFlow
-		</a>
+		<a href="/" class="text-xl font-bold" style="color: var(--color-primary)"> 📈 SvelteFlow </a>
 	</div>
 
 	<nav class="flex-1 px-3 py-4">
-		{#each navItems as item}
+		{#each navItems as item (item.href)}
 			{@const active = isActive(item.href, $page.url.pathname)}
 			<a
 				href={item.href}
