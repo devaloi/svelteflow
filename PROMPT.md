@@ -1,8 +1,8 @@
-# Build agentforge — Multi-Agent Orchestration Framework
+# Build svelteflow — Analytics Dashboard with SvelteKit
 
-You are building a **portfolio project** for a Senior AI Engineer's public GitHub. It must be impressive, clean, and production-grade. This is the **flagship AI project** in the entire portfolio — it needs to be the most technically impressive piece. Read these docs before writing any code:
+You are building a **portfolio project** for a Senior AI Engineer's public GitHub. It must be impressive, clean, and production-grade. Read these docs before writing any code:
 
-1. **`A09-go-multi-agent.md`** — Complete project spec: architecture, agent types, tool definitions, DAG execution, shared memory, supervisor flow, YAML configuration, CLI, commit plan. This is your primary blueprint. Follow it phase by phase.
+1. **`SV01-sveltekit-dashboard.md`** — Complete project spec: architecture, database schema, SSE protocol, form actions, Chart.js components, dashboard pages, commit plan. This is your primary blueprint. Follow it phase by phase.
 2. **`github-portfolio.md`** — Portfolio goals and Definition of Done (Level 1 + Level 2). Understand the quality bar.
 3. **`github-portfolio-checklist.md`** — Pre-publish checklist. Every item must pass before you're done.
 
@@ -11,52 +11,49 @@ You are building a **portfolio project** for a Senior AI Engineer's public GitHu
 ## Instructions
 
 ### Read first, build second
-Read all three docs completely before writing a single line of code. This is a complex system with many interacting parts. Understand the agent execution loop (prompt → LLM → tool call → result → repeat), the supervisor pattern (plan → delegate → synthesize), the DAG executor (topological sort, parallel execution), and the shared memory model (agents collaborate through a key-value store). Internalize the full architecture before you start.
+Read all three docs completely before writing a single line of code. Understand the SvelteKit routing model, form actions for mutations, the SSE real-time pattern, and the Chart.js integration. This project demonstrates SvelteKit as a mature, production-ready framework — the architecture must reflect that.
 
 ### Follow the phases in order
-The project spec has 8 phases. This is an L-size project — do them in strict order:
-1. **Foundation & Types** — project setup, core types (Message, ToolCall, SubTask, AgentConfig), YAML config loader
-2. **LLM Providers & History** — provider interface, OpenAI/Anthropic/Ollama implementations, conversation history with token budget trimming
-3. **Tool System & Shared Memory** — tool interface and registry with JSON Schema, all built-in tools, shared memory store with agent attribution
-4. **Agent Execution Loop** — core loop (prompt → LLM → tool call → result → repeat), specialized agent constructors
-5. **Planning & DAG Execution** — DAG data structure with topological sort, task planner (LLM-powered decomposition), DAG executor with parallel execution
-6. **Supervisor & Synthesis** — supervisor agent orchestrating the full flow, result synthesizer, structured observability logging
-7. **CLI & Examples** — cobra CLI with run/list/validate commands, example programs, integration tests
-8. **Documentation & Polish** — YAML config files, comprehensive README, final lint and checks
+The project spec has 5 phases. Do them in order:
+1. **Foundation & Database** — project setup with SvelteKit 2.50 + Svelte 5, Drizzle ORM schema, SQLite setup, seed script with realistic demo data
+2. **Auth & Layout** — cookie-based authentication with sessions, login/logout form actions, dashboard layout shell with sidebar and header, dark mode with CSS custom properties
+3. **Charts & Dashboard Pages** — Chart.js wrapper components (line, bar, pie, doughnut), StatCard and DataTable, all 4 dashboard pages (Overview, Sales, Users, System) with load functions
+4. **Real-time & Data Export** — SSE endpoint with streaming metrics, client-side EventSource integration, CSV export with proper escaping and download
+5. **Testing & Polish** — Vitest unit tests, Playwright E2E tests, utility formatters, README with screenshots
 
 ### Commit frequently
-Follow the commit plan in the spec (27 commits). Use **conventional commits**. Each commit should be a logical unit. This is an L-size project — the commit history should tell the story of building a complex system incrementally.
+Follow the commit plan in the spec. Use **conventional commits** (`feat:`, `test:`, `docs:`, `chore:`). Each commit should be a logical unit.
 
 ### Quality non-negotiables
-- **The agent loop must be clean and readable.** A reader should understand the entire agent pattern from `loop.go`. The loop itself should be ~30-50 lines. All complexity is in the supporting types, not the loop.
-- **The supervisor is the star.** The plan → delegate → execute → synthesize flow must be clear, well-logged, and testable. A recruiter reading the supervisor code should immediately see you understand multi-agent orchestration.
-- **DAG execution is correct.** Topological sort, cycle detection, parallel execution of independent tasks, dependency-respecting ordering. This is a graph algorithm interview question made real.
-- **Shared memory enables collaboration.** Agents don't just run in isolation — the researcher stores findings, the coder reads them, the reviewer reads the code. This collaboration through shared memory is what makes this a multi-agent system, not just multiple single agents.
-- **Provider abstraction is clean.** OpenAI, Anthropic, and Ollama all implement the same interface. Switching providers is a config change. The agent doesn't know which provider it's using.
-- **Tool system uses JSON Schema.** Every tool has a formal parameter schema. The agent sends tool schemas to the LLM. Arguments are validated before execution. This mirrors how OpenAI and Anthropic actually define tools.
-- **Mock provider for all tests.** No test hits a real LLM API. The mock provider returns scripted responses including tool calls. This makes tests fast, deterministic, and CI-friendly.
-- **Token budget management.** Each agent has a configurable token budget. When history approaches the limit, oldest non-system messages are trimmed. This prevents runaway costs and context overflow.
-- **Observability tells the story.** Every agent decision, tool call, and result is logged with structured data. The execution trace can be printed as a timeline. A debugging developer can follow exactly what happened.
-- **YAML configuration is the control plane.** Agents, tools, and providers are defined in YAML. You can add a new agent by adding a YAML block — no code changes. This shows production-grade configurability.
-- **CLI output is beautiful.** The execution output shown in the spec (with emojis, progress, timing) must look professional in the terminal. This is the first thing someone runs.
-- **Lint clean.** `golangci-lint run` and `go vet` must pass with zero warnings.
+- **Svelte 5 runes everywhere.** Use `$state`, `$derived`, `$effect` — not legacy `let` reactive declarations or `$:` labels. Snippets where appropriate.
+- **SvelteKit form actions for mutations.** Login, logout, and filtering use form actions with progressive enhancement. No `fetch()` calls for mutations that can use actions.
+- **Server-side rendering with streaming.** Load functions return data. Use `Promise` streaming for slow queries so the page shell renders immediately.
+- **TypeScript strict.** No `any` types. All load function return types inferred or explicit. All component props typed.
+- **Chart.js wrapped properly.** Each chart is a reusable Svelte component accepting typed props. Charts respond to dark mode changes. Loading skeletons while data loads.
+- **Drizzle ORM type-safe queries.** All database access through Drizzle. No raw SQL strings. Schema is the source of truth.
+- **SSE is production-quality.** Server cleans up on disconnect. Client auto-reconnects. Heartbeat keeps the connection alive. State updates reactively via runes.
+- **Auth is secure.** bcrypt for passwords. httpOnly + secure + sameSite cookies. Session expiry. Protected routes via hooks.
+- **Dark mode is seamless.** No flash on load (theme read from cookie server-side). All charts, tables, and components adapt.
+- **CSV export handles edge cases.** Commas in values, quotes, newlines, Unicode — all escaped correctly. Test this.
+- **Responsive layout.** Sidebar collapses on mobile. Charts resize. Tables scroll horizontally. Touch-friendly.
+- **Lint clean.** ESLint + Prettier. `tsc --noEmit` passes. Zero build warnings.
 
 ### What NOT to do
-- Don't use LangChain, LangGraph, CrewAI, or any agent framework. This IS the framework, built from primitives. Using an existing framework defeats the entire purpose.
-- Don't use LLM SDKs (openai-go, anthropic-go). Raw `net/http` calls to the APIs. This shows you understand the underlying protocols.
-- Don't hardcode agent definitions in Go. Agents must be configurable via YAML. The code provides the engine; YAML provides the configuration.
-- Don't skip the DAG executor. Running sub-tasks sequentially is trivial. The DAG with parallel execution and dependency resolution is what makes this impressive.
-- Don't skip shared memory. Without it, this is just "run 4 agents independently." Shared memory is what makes agents collaborate.
-- Don't make the agent loop a monolith. The loop, tool execution, history management, and provider calls should be separate, testable units.
+- Don't use Svelte 4 syntax. No `$:` reactive statements, no `export let` for props. Use runes and `$props()`.
+- Don't create API routes for mutations that can use form actions. Form actions are the SvelteKit way.
+- Don't use WebSockets for real-time. SSE is simpler, sufficient, and demonstrates the pattern cleanly.
+- Don't skip the seed script. The dashboard must look impressive on first run with realistic data.
+- Don't put database queries in components. All data loading happens in `+page.server.ts` or `+layout.server.ts`.
+- Don't use a CSS framework beyond Tailwind. No component libraries (Skeleton UI, DaisyUI). Build the components.
 - Don't leave `// TODO` or `// FIXME` comments anywhere.
-- Don't commit `.env` files or any API keys.
+- Don't commit `.env` files or any secrets.
 
 ---
 
 ## GitHub Username
 
-The GitHub username is **devaloi**. For Go module paths, use `github.com/devaloi/agentforge`. All internal imports must use this module path.
+The GitHub username is **devaloi**. For package.json and any GitHub URLs, use `github.com/devaloi/svelteflow`.
 
 ## Start
 
-Read the three docs. Then begin Phase 1 from `A09-go-multi-agent.md`.
+Read the three docs. Then begin Phase 1 from `SV01-sveltekit-dashboard.md`.

@@ -1,350 +1,181 @@
-# A09: agentforge — Multi-Agent Orchestration Framework
+# SV01: svelteflow — Analytics Dashboard with SvelteKit
 
-**Catalog ID:** A09 | **Size:** L | **Language:** Go 1.26
-**Repo name:** `agentforge`
-**One-liner:** A multi-agent orchestration framework — a supervisor agent decomposes tasks into a dependency DAG, delegates to specialized sub-agents (researcher, coder, reviewer, writer), manages shared memory, and synthesizes results. Built from primitives, no frameworks.
+**Catalog ID:** SV01 | **Size:** M | **Language:** TypeScript / SvelteKit 2.50 / Svelte 5
+**Repo name:** `svelteflow`
+**One-liner:** An analytics dashboard built with SvelteKit — SSR with streaming, real-time data via Server-Sent Events, form actions for mutations, Chart.js visualizations, and a responsive multi-page UI.
 
 ---
 
 ## Why This Stands Out
 
-- **The flagship AI project** — this is the most impressive, most complex project in the entire portfolio
-- **Supervisor agent** — receives a complex task, uses chain-of-thought planning to decompose it into a DAG of sub-tasks with dependencies
-- **Specialized agents** — researcher (web search), coder (code generation), reviewer (code review), writer (text synthesis) — each with a system prompt, tools, and memory
-- **Agent execution loop** — the core pattern: system prompt → user message → LLM → tool call → execute tool → feed result → repeat until done
-- **Shared memory** — key-value store that agents read/write for collaboration (researcher stores findings, coder reads them)
-- **DAG execution engine** — topological sort, parallel execution of independent sub-tasks, respects dependencies
-- **Tool system** — JSON Schema tool definitions, timeout-guarded execution, result parsing, extensible tool registry
-- **Multi-provider LLM** — interface supporting OpenAI, Anthropic, and Ollama with streaming
-- **Token budget management** — per-agent conversation history with automatic trimming when approaching token limits
-- **Observability** — structured logging of every agent decision, tool call, and result — full execution trace
-- **CLI** — `agentforge run "Build a REST API in Go"` — runs the full multi-agent flow in the terminal with live output
-- **No LangChain/LangGraph/CrewAI** — built from raw HTTP calls and Go primitives, demonstrating deep understanding of how agent systems actually work
-- **YAML configuration** — agent definitions, tool registrations, and LLM settings all in YAML — agents are configurable without code changes
+- **SvelteKit 2.50 + Svelte 5** — runes (`$state`, `$derived`, `$effect`), snippets, latest reactivity model — not Svelte 4 legacy code
+- **Server-side rendering with streaming** — `load` functions return streamed promises for fast initial paint with progressive data loading
+- **Form actions for mutations** — SvelteKit-native progressive enhancement, no API routes needed for writes
+- **Server-Sent Events** — real-time metric updates pushed from server to dashboard without WebSocket complexity
+- **Chart.js interactive visualizations** — line, bar, pie, doughnut charts with responsive containers and animation
+- **SQLite + Drizzle ORM** — type-safe database layer with migrations, seeded with realistic demo data
+- **Cookie-based auth** — session management with httpOnly cookies, login/logout flow, protected routes via hooks
+- **Multi-page dashboard** — Overview, Sales Analytics, User Metrics, System Health — each with distinct data and visualizations
+- **Dark mode** — CSS custom properties toggle with `prefers-color-scheme` default and manual override persisted in cookie
+- **Data export** — CSV download from any table or chart dataset with proper headers and encoding
 
 ---
 
 ## Architecture
 
 ```
-agentforge/
-├── cmd/
-│   └── agentforge/
-│       └── main.go                        # CLI entry: parse args, load config, run supervisor
-├── internal/
-│   ├── agent/
-│   │   ├── agent.go                       # Core agent: system prompt, tools, memory, execution loop
-│   │   ├── agent_test.go
-│   │   ├── config.go                      # Agent config: name, model, system prompt, tools, limits
-│   │   ├── loop.go                        # Execution loop: prompt → LLM → tool call → result → repeat
-│   │   ├── loop_test.go
-│   │   └── types.go                       # AgentResult, AgentStatus, LoopState
-│   ├── supervisor/
-│   │   ├── supervisor.go                  # Supervisor agent: receives task, plans, delegates, synthesizes
-│   │   ├── supervisor_test.go
-│   │   ├── planner.go                     # Task decomposition: complex task → DAG of sub-tasks
-│   │   ├── planner_test.go
-│   │   ├── synthesizer.go                 # Result synthesis: merge sub-agent outputs into final answer
-│   │   └── synthesizer_test.go
-│   ├── agents/
-│   │   ├── researcher.go                  # Researcher agent: web search tool, extract + summarize info
-│   │   ├── researcher_test.go
-│   │   ├── coder.go                       # Coder agent: code generation tool, write + explain code
-│   │   ├── coder_test.go
-│   │   ├── reviewer.go                    # Reviewer agent: code review tool, analyze code for issues
-│   │   ├── reviewer_test.go
-│   │   ├── writer.go                      # Writer agent: text generation, format + structure prose
-│   │   └── writer_test.go
-│   ├── planner/
-│   │   ├── dag.go                         # DAG data structure: nodes, edges, topological sort
-│   │   ├── dag_test.go
-│   │   ├── task.go                        # SubTask: id, description, agent type, dependencies, status
-│   │   └── task_test.go
-│   ├── executor/
-│   │   ├── executor.go                    # DAG executor: run sub-tasks respecting dependencies
-│   │   ├── executor_test.go
-│   │   ├── parallel.go                    # Parallel execution with errgroup + semaphore
-│   │   └── parallel_test.go
-│   ├── memory/
-│   │   ├── store.go                       # Shared memory: thread-safe key-value store
-│   │   ├── store_test.go
-│   │   └── types.go                       # MemoryEntry: key, value, author (agent name), timestamp
-│   ├── tools/
-│   │   ├── registry.go                    # Tool registry: register, list, get, invoke
-│   │   ├── registry_test.go
-│   │   ├── tool.go                        # Tool interface: Name, Description, Schema, Execute
-│   │   ├── web_search.go                  # Web search tool (simulated or API-backed)
-│   │   ├── web_search_test.go
-│   │   ├── code_gen.go                    # Code generation tool (delegates to LLM with code prompt)
-│   │   ├── code_review.go                 # Code review tool (analyzes code for issues)
-│   │   ├── text_gen.go                    # Text generation tool (delegates to LLM with writing prompt)
-│   │   ├── read_file.go                   # Read file from disk (sandboxed)
-│   │   ├── write_file.go                  # Write file to disk (sandboxed output directory)
-│   │   ├── memory_read.go                 # Read from shared memory
-│   │   ├── memory_write.go                # Write to shared memory
-│   │   └── schema.go                      # JSON Schema builder for tool parameters
-│   ├── provider/
-│   │   ├── provider.go                    # LLM provider interface: ChatComplete, Stream
-│   │   ├── openai.go                      # OpenAI: chat/completions with function calling
-│   │   ├── openai_test.go
-│   │   ├── anthropic.go                   # Anthropic: messages API with tool_use
-│   │   ├── anthropic_test.go
-│   │   ├── ollama.go                      # Ollama: local model API with tool support
-│   │   ├── ollama_test.go
-│   │   ├── mock.go                        # Mock provider for deterministic testing
-│   │   └── types.go                       # Message, ToolCall, ToolResult, Usage, StreamChunk
-│   ├── history/
-│   │   ├── history.go                     # Conversation history per agent with token counting
-│   │   ├── history_test.go
-│   │   ├── trimmer.go                     # Token budget trimmer: drop oldest messages to fit limit
-│   │   └── trimmer_test.go
-│   ├── config/
-│   │   ├── loader.go                      # Load YAML config files: agents, tools, providers
-│   │   ├── loader_test.go
-│   │   └── types.go                       # Config structs: AgentConfig, ToolConfig, ProviderConfig
-│   └── observability/
-│       ├── logger.go                      # Structured logger: agent events, tool calls, decisions
-│       ├── logger_test.go
-│       ├── trace.go                       # Execution trace: full DAG execution timeline
-│       └── types.go                       # TraceEvent, TraceSpan, EventType
-├── config/
-│   ├── agents.yaml                        # Agent definitions: name, model, system prompt, tools
-│   ├── tools.yaml                         # Tool registrations: name, description, schema
-│   └── providers.yaml                     # LLM provider config: API keys (env refs), models, defaults
-├── examples/
-│   ├── simple/main.go                     # Single-agent: researcher answers a question
-│   ├── code-task/main.go                  # Multi-agent: plan → code → review → deliver
-│   └── research-report/main.go            # Multi-agent: research → write → synthesize report
-├── testdata/
-│   ├── mock_responses/                    # Scripted LLM responses for deterministic tests
-│   │   ├── planner_response.json
-│   │   ├── researcher_response.json
-│   │   ├── coder_response.json
-│   │   └── reviewer_response.json
-│   └── configs/                           # Test config files
-│       ├── test_agents.yaml
-│       └── test_tools.yaml
-├── go.mod
-├── go.sum
-├── Makefile                               # build, test, lint, run, examples
-├── .env.example                           # OPENAI_API_KEY, ANTHROPIC_API_KEY, OLLAMA_URL
+svelteflow/
+├── src/
+│   ├── app.html                            # HTML shell with theme class
+│   ├── app.css                             # Global styles, CSS custom properties, dark mode
+│   ├── hooks.server.ts                     # Auth guard: validate session cookie, protect routes
+│   ├── lib/
+│   │   ├── server/
+│   │   │   ├── db.ts                       # Drizzle client + SQLite connection
+│   │   │   ├── schema.ts                   # Drizzle schema: users, sessions, sales, metrics, events
+│   │   │   ├── seed.ts                     # Seed script: generate realistic demo data
+│   │   │   ├── auth.ts                     # Password hashing (bcrypt), session create/validate/destroy
+│   │   │   └── sse.ts                      # SSE helper: create ReadableStream, push events
+│   │   ├── components/
+│   │   │   ├── charts/
+│   │   │   │   ├── LineChart.svelte        # Chart.js line chart wrapper
+│   │   │   │   ├── BarChart.svelte         # Chart.js bar chart wrapper
+│   │   │   │   ├── PieChart.svelte         # Chart.js pie chart wrapper
+│   │   │   │   ├── DoughnutChart.svelte    # Chart.js doughnut chart wrapper
+│   │   │   │   └── ChartContainer.svelte   # Responsive wrapper with loading skeleton
+│   │   │   ├── layout/
+│   │   │   │   ├── Sidebar.svelte          # Navigation sidebar with active state
+│   │   │   │   ├── Header.svelte           # Top bar: breadcrumb, user menu, dark mode toggle
+│   │   │   │   ├── StatCard.svelte         # KPI card: value, label, trend arrow, sparkline
+│   │   │   │   └── DataTable.svelte        # Sortable data table with pagination
+│   │   │   ├── ui/
+│   │   │   │   ├── Button.svelte           # Button variants: primary, secondary, ghost, danger
+│   │   │   │   ├── Modal.svelte            # Dialog modal with backdrop
+│   │   │   │   ├── Toast.svelte            # Toast notification system
+│   │   │   │   ├── Skeleton.svelte         # Loading skeleton placeholder
+│   │   │   │   └── DateRangePicker.svelte  # Date range selector for filtering
+│   │   │   └── forms/
+│   │   │       ├── LoginForm.svelte        # Login form with validation
+│   │   │       └── ExportButton.svelte     # CSV export trigger with format options
+│   │   ├── stores/
+│   │   │   ├── theme.svelte.ts             # Dark mode state with $state rune
+│   │   │   └── realtime.svelte.ts          # SSE connection state and latest metrics
+│   │   ├── utils/
+│   │   │   ├── csv.ts                      # CSV serialization with proper escaping
+│   │   │   ├── format.ts                   # Number/date/currency formatters
+│   │   │   └── chart-options.ts            # Shared Chart.js config (colors, fonts, responsive)
+│   │   └── types/
+│   │       ├── dashboard.ts                # Dashboard data types: KPI, TimeSeriesPoint, etc.
+│   │       └── auth.ts                     # User, Session types
+│   ├── routes/
+│   │   ├── +layout.svelte                  # Root layout: sidebar + header + slot
+│   │   ├── +layout.server.ts               # Root load: session user for layout
+│   │   ├── login/
+│   │   │   ├── +page.svelte                # Login page UI
+│   │   │   └── +page.server.ts             # Form action: validate credentials, set cookie
+│   │   ├── logout/
+│   │   │   └── +page.server.ts             # Form action: destroy session, clear cookie
+│   │   ├── (dashboard)/
+│   │   │   ├── +layout.server.ts           # Auth guard for dashboard group
+│   │   │   ├── +page.svelte                # Overview: KPI cards, revenue line chart, activity bar
+│   │   │   ├── +page.server.ts             # Load: aggregate KPIs, time series data (streamed)
+│   │   │   ├── sales/
+│   │   │   │   ├── +page.svelte            # Sales: revenue by product, top customers, trends
+│   │   │   │   └── +page.server.ts         # Load: sales data with date range filter
+│   │   │   ├── users/
+│   │   │   │   ├── +page.svelte            # Users: signups, retention, demographics pie charts
+│   │   │   │   └── +page.server.ts         # Load: user analytics data
+│   │   │   └── system/
+│   │   │       ├── +page.svelte            # System: CPU, memory, error rates, uptime
+│   │   │       └── +page.server.ts         # Load: system health + SSE endpoint setup
+│   │   └── api/
+│   │       ├── metrics/
+│   │       │   └── stream/
+│   │       │       └── +server.ts          # GET: SSE endpoint for real-time metrics
+│   │       └── export/
+│   │           └── +server.ts              # GET: CSV export endpoint with query params
+│   └── tests/
+│       ├── unit/
+│       │   ├── csv.test.ts                 # CSV serializer tests
+│       │   ├── format.test.ts              # Formatter tests
+│       │   └── auth.test.ts                # Auth logic tests
+│       └── e2e/
+│           ├── login.test.ts               # Login flow E2E
+│           ├── dashboard.test.ts           # Dashboard navigation E2E
+│           └── export.test.ts              # CSV export E2E
+├── drizzle/
+│   └── migrations/                         # Auto-generated migration files
+├── static/
+│   └── favicon.png
+├── drizzle.config.ts                       # Drizzle Kit config
+├── svelte.config.js                        # SvelteKit config with adapter-node
+├── vite.config.ts                          # Vite config with vitest
+├── tailwind.config.ts                      # Tailwind CSS config with dark mode
+├── tsconfig.json
+├── package.json
+├── Makefile                                # dev, build, test, lint, seed, migrate
+├── .env.example                            # DATABASE_URL, SESSION_SECRET
 ├── .gitignore
-├── .golangci.yml
+├── .eslintrc.cjs
+├── .prettierrc
 ├── LICENSE
+├── playwright.config.ts
 └── README.md
 ```
 
 ---
 
-## Core Concepts
+## Database Schema
 
-### Agent Execution Loop
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| `users` | id, email, password_hash, name, role, created_at | User accounts |
+| `sessions` | id, user_id, token, expires_at | Auth sessions |
+| `sales` | id, product, amount, customer, region, created_at | Sales records |
+| `metrics` | id, name, value, unit, recorded_at | Time-series metrics |
+| `events` | id, type, source, payload (JSON), created_at | System events log |
 
-```
-┌─────────────────────────────────────────┐
-│              Agent Loop                  │
-│                                          │
-│  System Prompt + User Message            │
-│         ↓                                │
-│  Call LLM (with tool schemas)            │
-│         ↓                                │
-│  Response has tool_call? ──→ NO ──→ Done │
-│         ↓ YES                            │
-│  Validate args against schema            │
-│         ↓                                │
-│  Execute tool (with timeout)             │
-│         ↓                                │
-│  Append tool_result to history           │
-│         ↓                                │
-│  Token budget check → trim if needed     │
-│         ↓                                │
-│  Loop back to "Call LLM"                 │
-│  (max iterations guard)                  │
-└─────────────────────────────────────────┘
-```
+---
 
-### Supervisor Flow
+## SSE Protocol
 
 ```
-User: "Build a REST API for a todo app in Go"
-         ↓
-┌─ Supervisor ──────────────────────────────────┐
-│  1. Plan: decompose task into sub-tasks        │
-│     → research: "Go REST API best practices"   │
-│     → code: "Implement todo CRUD handlers"     │
-│     → code: "Implement data models"            │
-│     → review: "Review generated code"          │
-│     → writer: "Write API documentation"        │
-│                                                │
-│  2. Build DAG:                                 │
-│     research ──→ code(handlers) ──→ review     │
-│                  code(models) ────→ review      │
-│                                    review ──→ writer │
-│                                                │
-│  3. Execute DAG (parallel where possible):     │
-│     Step 1: research (independent)             │
-│     Step 2: code(handlers) + code(models)      │
-│     Step 3: review                             │
-│     Step 4: writer                             │
-│                                                │
-│  4. Synthesize: merge all outputs into final   │
-└───────────────────────────────────────────────┘
+GET /api/metrics/stream
+Accept: text/event-stream
+
+event: metric
+data: {"name":"cpu_usage","value":42.5,"unit":"%","timestamp":"2025-01-15T10:00:00Z"}
+
+event: metric
+data: {"name":"active_users","value":1847,"unit":"count","timestamp":"2025-01-15T10:00:00Z"}
+
+event: metric
+data: {"name":"error_rate","value":0.12,"unit":"%","timestamp":"2025-01-15T10:00:00Z"}
+
+event: heartbeat
+data: {}
 ```
 
 ---
 
-## Agent Types
+## Form Actions
 
-| Agent | System Prompt Focus | Tools | Output |
-|-------|-------------------|-------|--------|
-| Supervisor | Task decomposition, planning, delegation | planner (internal) | Sub-task DAG + final synthesis |
-| Researcher | Information gathering, summarization | web_search, memory_write | Research findings stored in shared memory |
-| Coder | Code generation, implementation | code_gen, write_file, memory_read, memory_write | Generated code files + explanation |
-| Reviewer | Code analysis, bug detection, improvements | code_review, memory_read | Review comments + approval/rejection |
-| Writer | Documentation, structuring, formatting | text_gen, memory_read | Formatted text documents |
+| Route | Action | Description |
+|-------|--------|-------------|
+| `/login` | `default` | Validate email/password, create session, set cookie, redirect |
+| `/logout` | `default` | Destroy session, clear cookie, redirect to login |
+| `/sales` | `filter` | Apply date range filter, re-run load with params |
 
 ---
 
-## Tool Definitions
+## Dashboard Pages
 
-| Tool | Parameters | Returns | Timeout |
-|------|-----------|---------|---------|
-| `web_search` | `query: string` | `results: [{title, snippet, url}]` | 10s |
-| `code_gen` | `language: string, task: string, context: string` | `code: string, explanation: string` | 30s |
-| `code_review` | `code: string, language: string` | `issues: [{severity, line, message}], approved: bool` | 15s |
-| `text_gen` | `topic: string, style: string, context: string` | `text: string` | 20s |
-| `read_file` | `path: string` | `content: string` | 5s |
-| `write_file` | `path: string, content: string` | `success: bool` | 5s |
-| `memory_read` | `key: string` | `value: string, found: bool` | 1s |
-| `memory_write` | `key: string, value: string` | `success: bool` | 1s |
-
----
-
-## Shared Memory
-
-```go
-// Agents collaborate through shared memory
-memory.Write("research_findings", "Go REST APIs typically use...")   // researcher writes
-findings := memory.Read("research_findings")                         // coder reads
-memory.Write("generated_code", "package main\n...")                  // coder writes
-code := memory.Read("generated_code")                                // reviewer reads
-```
-
-| Operation | Thread-Safe | Description |
-|-----------|-------------|-------------|
-| `Read(key)` | Yes (RLock) | Read value by key, returns (value, found) |
-| `Write(key, value)` | Yes (Lock) | Write value, records author + timestamp |
-| `List()` | Yes (RLock) | List all keys with metadata |
-| `Delete(key)` | Yes (Lock) | Remove key |
-
----
-
-## YAML Configuration
-
-### agents.yaml
-
-```yaml
-agents:
-  researcher:
-    model: gpt-4o
-    provider: openai
-    system_prompt: |
-      You are a research assistant. Your job is to find accurate, relevant
-      information using web search. Summarize findings clearly and store
-      them in shared memory for other agents to use.
-    tools: [web_search, memory_write]
-    max_iterations: 5
-    token_budget: 8000
-
-  coder:
-    model: gpt-4o
-    provider: openai
-    system_prompt: |
-      You are an expert software engineer. Write clean, well-documented,
-      production-quality code. Read research findings from shared memory
-      for context. Write generated code to files.
-    tools: [code_gen, read_file, write_file, memory_read, memory_write]
-    max_iterations: 10
-    token_budget: 16000
-
-  reviewer:
-    model: claude-sonnet-4-20250514
-    provider: anthropic
-    system_prompt: |
-      You are a senior code reviewer. Analyze code for bugs, security issues,
-      performance problems, and style. Be constructive and specific.
-    tools: [code_review, memory_read]
-    max_iterations: 3
-    token_budget: 8000
-
-  writer:
-    model: gpt-4o-mini
-    provider: openai
-    system_prompt: |
-      You are a technical writer. Create clear, well-structured documentation.
-      Read context from shared memory to understand what was built.
-    tools: [text_gen, memory_read]
-    max_iterations: 5
-    token_budget: 8000
-```
-
----
-
-## CLI Usage
-
-```
-agentforge run "Build a REST API for a todo app in Go"
-agentforge run --config ./config/ "Research quantum computing advances in 2025"
-agentforge run --provider anthropic --model claude-sonnet-4-20250514 "Review this Go code for issues"
-agentforge agents list                    # List configured agents
-agentforge tools list                     # List registered tools
-agentforge config validate ./config/      # Validate configuration files
-```
-
-### CLI Output (during execution)
-
-```
-🔵 Supervisor: Planning task decomposition...
-   → Created 4 sub-tasks in dependency DAG
-
-📋 Execution Plan:
-   Step 1: [researcher] Research Go REST API best practices
-   Step 2: [coder] Implement data models  |  [coder] Implement handlers
-   Step 3: [reviewer] Review generated code
-   Step 4: [writer] Write API documentation
-
-🔍 Researcher: Starting "Research Go REST API best practices"
-   🔧 web_search("Go REST API best practices 2025")
-   📝 Stored findings in shared memory: research_findings
-   ✅ Completed in 4.2s
-
-💻 Coder: Starting "Implement data models" (parallel)
-   📖 Read: research_findings
-   🔧 code_gen(language="go", task="todo data models")
-   💾 Wrote: output/models.go
-   ✅ Completed in 8.1s
-
-💻 Coder: Starting "Implement handlers" (parallel)
-   📖 Read: research_findings
-   🔧 code_gen(language="go", task="todo CRUD handlers")
-   💾 Wrote: output/handlers.go
-   ✅ Completed in 12.3s
-
-🔎 Reviewer: Starting "Review generated code"
-   📖 Read: generated_code
-   🔧 code_review(language="go")
-   ✅ Approved with 2 minor suggestions. Completed in 5.7s
-
-📝 Writer: Starting "Write API documentation"
-   📖 Read: research_findings, generated_code, review_results
-   🔧 text_gen(topic="todo API docs")
-   💾 Wrote: output/README.md
-   ✅ Completed in 6.8s
-
-🏁 Task Complete (37.1s total)
-   Files generated: output/models.go, output/handlers.go, output/README.md
-   Agents used: 4 | Tool calls: 9 | Total tokens: 24,847
-```
+| Page | Route | Charts | Data |
+|------|-------|--------|------|
+| Overview | `/` | Revenue line, Activity bar, 4 KPI cards | Aggregated totals, 30-day trends |
+| Sales | `/sales` | Revenue by product (bar), Top customers (table), Monthly trend (line) | Sales records with date filter |
+| Users | `/users` | Signups over time (line), Demographics (pie), Retention (doughnut) | User analytics |
+| System | `/system` | CPU/Memory (line, real-time), Error rate (bar), Uptime (stat card) | Live system metrics via SSE |
 
 ---
 
@@ -352,274 +183,194 @@ agentforge config validate ./config/      # Validate configuration files
 
 | Component | Choice |
 |-----------|--------|
-| Language | Go 1.26 |
-| HTTP | stdlib `net/http` (for LLM API calls) |
-| JSON | stdlib `encoding/json` |
-| YAML | `gopkg.in/yaml.v3` |
-| CLI | `cobra` + `pflag` |
-| Concurrency | `errgroup` + semaphore channel |
-| LLM Providers | OpenAI, Anthropic, Ollama (raw HTTP, no SDKs) |
-| Testing | stdlib + mock provider + table-driven |
-| Linting | golangci-lint |
+| Framework | SvelteKit 2.50 + Svelte 5 |
+| Language | TypeScript 5.7 (strict mode) |
+| Database | SQLite (better-sqlite3) |
+| ORM | Drizzle ORM + Drizzle Kit |
+| Charts | Chart.js 4 + svelte-chartjs |
+| Styling | Tailwind CSS 4 |
+| Auth | Custom cookie-based (bcrypt) |
+| Real-time | Server-Sent Events (native) |
+| Unit Testing | Vitest |
+| E2E Testing | Playwright |
+| Linting | ESLint + Prettier |
+| Adapter | @sveltejs/adapter-node |
 
 ---
 
 ## Phased Build Plan
 
-### Phase 1: Foundation & Types
+### Phase 1: Foundation & Database
 
 **1.1 — Project setup**
-- `go mod init github.com/devaloi/agentforge`
-- Directory structure, Makefile, `.gitignore`, `.golangci.yml`
-- Add LICENSE (MIT), `.env.example`
+- `npx sv create svelteflow` with SvelteKit 2.50, Svelte 5, TypeScript
+- Add Tailwind CSS, Vitest, Playwright
+- Makefile with targets: `dev`, `build`, `test`, `test:e2e`, `lint`, `format`, `seed`, `migrate`
+- `.env.example` with `DATABASE_URL`, `SESSION_SECRET`
 
-**1.2 — Core types**
-- `Message` struct: Role (system/user/assistant/tool), Content, ToolCalls, ToolCallID
-- `ToolCall` struct: ID, Name, Arguments (JSON string)
-- `ToolResult` struct: ToolCallID, Content, IsError
-- `AgentConfig`: Name, Model, Provider, SystemPrompt, Tools (list), MaxIterations, TokenBudget
-- `SubTask`: ID, Description, AgentType, Dependencies ([]string), Status, Result
-- Tests: type construction, JSON marshaling round-trips
+**1.2 — Database schema with Drizzle**
+- Install `drizzle-orm`, `drizzle-kit`, `better-sqlite3`
+- Define schema in `src/lib/server/schema.ts`: users, sessions, sales, metrics, events
+- Configure `drizzle.config.ts` for SQLite
+- Run `drizzle-kit generate` and `drizzle-kit migrate`
+- Create `db.ts` client initialization
 
-**1.3 — Configuration loader**
-- Load `agents.yaml`: parse into `[]AgentConfig`
-- Load `tools.yaml`: parse into `[]ToolConfig`
-- Load `providers.yaml`: parse into `ProviderConfig` (API keys from env vars, not YAML)
-- Validate: agent references valid provider, tools exist, required fields present
-- Tests: load valid config, missing fields, invalid references
+**1.3 — Seed script**
+- Generate 1 admin user (email: `admin@demo.com`, password: `password`)
+- Generate 500 sales records across 5 products, 4 regions, 12 months
+- Generate 2000 metric data points (CPU, memory, error rate, active users) across 30 days
+- Generate 100 system events
+- Run via `npm run seed` or `make seed`
 
-### Phase 2: LLM Providers & History
+### Phase 2: Auth & Layout
 
-**2.1 — Provider interface**
-- `Provider` interface: `ChatComplete(ctx, messages []Message, tools []Tool, config Config) (*Response, error)`
-- `Response`: Content string, ToolCalls []ToolCall, Usage (prompt tokens, completion tokens)
-- `StreamChunk`: Delta content, tool call delta, finish reason
-- Provider registry: get provider by name
+**2.1 — Authentication**
+- `auth.ts`: `hashPassword`, `verifyPassword` (bcrypt), `createSession`, `validateSession`, `destroySession`
+- Session tokens: crypto.randomUUID, stored in sessions table with expiry
+- httpOnly, secure, sameSite cookies
+- Tests: hash/verify round-trip, session CRUD
 
-**2.2 — OpenAI provider**
-- HTTP POST to `chat/completions` with function calling
-- Format messages: system, user, assistant, tool roles
-- Format tools: JSON Schema function definitions
-- Parse response: extract content, tool_calls, usage
-- Streaming: SSE parsing, yield chunks
-- Tests with httptest: success, tool call, streaming, error, rate limit
+**2.2 — Auth hooks and routes**
+- `hooks.server.ts`: read session cookie, validate, attach user to `event.locals`
+- Login page: form with email/password, form action validates + sets cookie
+- Logout: form action destroys session, clears cookie
+- Dashboard layout group `(dashboard)`: `+layout.server.ts` redirects to login if no session
 
-**2.3 — Anthropic provider**
-- HTTP POST to `messages` API with tool_use
-- Format messages: Anthropic's content block format
-- Parse tool_use content blocks vs text blocks
-- Handle stop_reason: "end_turn" vs "tool_use"
-- Tests with httptest matching OpenAI coverage
+**2.3 — Dashboard layout shell**
+- Root layout: sidebar + header + main content area
+- `Sidebar.svelte`: navigation links with active state, collapsible on mobile
+- `Header.svelte`: breadcrumb, user name, dark mode toggle, logout button
+- Responsive: sidebar collapses to hamburger menu below 768px
 
-**2.4 — Ollama provider**
-- HTTP POST to local Ollama API (`/api/chat`)
-- Format messages and tools for Ollama's format
-- Parse response with tool calls
-- Tests with httptest
+**2.4 — Dark mode**
+- CSS custom properties for all colors (--color-bg, --color-surface, --color-text, etc.)
+- `theme.svelte.ts` store using `$state` rune, reads `prefers-color-scheme` on init
+- Toggle persists preference in cookie (server-readable for SSR)
+- `app.html` applies theme class on `<html>` to prevent flash
 
-**2.5 — Conversation history**
-- Per-agent message history: append user, assistant, tool messages
-- Token counting: approximate count (chars / 4 as rough estimate)
-- Trimmer: when approaching token budget, drop oldest non-system messages
-- Configurable token budget per agent
-- Tests: append, trim at budget, system message preserved, accurate counting
+### Phase 3: Charts & Dashboard Pages
 
-### Phase 3: Tool System & Shared Memory
+**3.1 — Chart components**
+- `ChartContainer.svelte`: responsive wrapper, loading skeleton, error state
+- `LineChart.svelte`: accepts labels + datasets, renders Chart.js line with tooltips
+- `BarChart.svelte`: vertical/horizontal bar charts
+- `PieChart.svelte`: pie with legend
+- `DoughnutChart.svelte`: doughnut with center label
+- All use shared config from `chart-options.ts` (colors adapt to dark mode)
 
-**3.1 — Tool interface and registry**
-- `Tool` interface: `Name() string`, `Description() string`, `Schema() JSONSchema`, `Execute(ctx, params map[string]any) (*ToolResult, error)`
-- `Registry`: Register, Get, List, Invoke (with timeout)
-- JSON Schema for each tool's parameters: type, properties, required
-- Invoke wraps Execute with `context.WithTimeout`
-- Tests: register, invoke, timeout, unknown tool, schema validation
+**3.2 — StatCard and DataTable**
+- `StatCard.svelte`: large value, label, trend indicator (up/down/flat), percentage change, optional sparkline
+- `DataTable.svelte`: sortable columns (click header), pagination (10/25/50 per page), row click handler
+- Both responsive, skeleton loading states
 
-**3.2 — Built-in tools**
-- `web_search`: query → results array (simulated with configurable mock/real API)
-- `code_gen`: language + task + context → generated code + explanation (delegates to LLM)
-- `code_review`: code + language → issues array + approved bool (delegates to LLM)
-- `text_gen`: topic + style + context → generated text (delegates to LLM)
-- `read_file`: path → content (sandboxed to output directory)
-- `write_file`: path + content → success (sandboxed to output directory)
-- Each tool has JSON Schema, timeout config, error handling
-- Tests for each tool (mock LLM for generation tools)
+**3.3 — Overview page**
+- Load function: aggregate total revenue, total users, active sessions, error rate
+- 4 KPI StatCards at top
+- Revenue trend LineChart (30 days)
+- Activity BarChart (daily events by type)
+- Stream deferred data for slow aggregations
 
-**3.3 — Memory tools and shared store**
-- `SharedMemory`: thread-safe key-value store (`sync.RWMutex` + map)
-- `MemoryEntry`: Value, Author (agent name), Timestamp, Tags
-- `memory_read` tool: read key from shared memory
-- `memory_write` tool: write key to shared memory with agent attribution
-- `List()`: return all keys with metadata
-- Tests: concurrent read/write, agent attribution, list keys
+**3.4 — Sales Analytics page**
+- Load function: sales by product, top 10 customers, monthly revenue trend
+- `DateRangePicker.svelte` with form action to filter
+- Revenue by product BarChart
+- Monthly trend LineChart
+- Top customers DataTable with CSV export
 
-### Phase 4: Agent Execution Loop
+**3.5 — User Metrics page**
+- Load function: signup counts over time, demographics breakdown, retention cohorts
+- Signups LineChart
+- Demographics PieChart (role, region)
+- Retention DoughnutChart
+- User growth DataTable
 
-**4.1 — Core agent loop**
-- `Agent` struct: config, provider, tools (registry), history, memory (shared)
-- `Run(ctx, task string) (*AgentResult, error)`:
-  1. Append system prompt to history
-  2. Append user message (task) to history
-  3. Call provider with history + tool schemas
-  4. If response has tool calls → execute each tool → append results → loop
-  5. If response has no tool calls → return content as final result
-  6. Max iterations guard with clear error
-- `AgentResult`: Content, ToolCallsUsed, TokensUsed, Duration
-- Tests with mock provider: no tools, single tool call, multi-tool chain, max iterations
+**3.6 — System Health page**
+- Load function: latest CPU, memory, error rate, uptime
+- Connect to SSE endpoint for live updates
+- CPU + Memory LineChart (updates in real-time)
+- Error rate BarChart (last 24h)
+- Uptime StatCard
 
-**4.2 — Specialized agent constructors**
-- `NewResearcher(config, provider, memory)` — configured with researcher system prompt + tools
-- `NewCoder(config, provider, memory)` — configured with coder system prompt + tools
-- `NewReviewer(config, provider, memory)` — configured with reviewer system prompt + tools
-- `NewWriter(config, provider, memory)` — configured with writer system prompt + tools
-- Each reads its config from agents.yaml, registers its tools subset
-- Tests: each agent type runs with mock provider, uses correct tools
+### Phase 4: Real-time & Data Export
 
-### Phase 5: Planning & DAG Execution
+**4.1 — SSE endpoint**
+- `GET /api/metrics/stream`: return `ReadableStream` with `text/event-stream` content type
+- Push new metric event every 2 seconds (simulated: CPU ±5%, memory ±2%, etc.)
+- Heartbeat every 15 seconds to keep connection alive
+- Clean up on client disconnect (abort signal)
 
-**5.1 — DAG data structure**
-- `DAG` struct: nodes map, edges adjacency list
-- `AddNode(task SubTask)`, `AddEdge(from, to string)` — dependency: `from` must complete before `to`
-- `TopologicalSort() ([][]string, error)` — return execution layers (parallel groups)
-- Cycle detection: return error if DAG has cycles
-- `Ready(completed []string) []string` — return tasks whose dependencies are all completed
-- Tests: simple chain, diamond dependency, parallel groups, cycle detection
+**4.2 — SSE client integration**
+- `realtime.svelte.ts`: `EventSource` connection with auto-reconnect
+- Parse metric events, update `$state` store
+- System Health page subscribes, charts update reactively
+- Disconnect when navigating away from System page (`$effect` cleanup)
 
-**5.2 — Task planner**
-- `Plan(ctx, task string, provider Provider) (*DAG, error)`
-- Send task to supervisor LLM with planning prompt
-- Planning prompt instructs LLM to decompose into sub-tasks with JSON output:
-  ```json
-  {
-    "tasks": [
-      {"id": "research", "description": "...", "agent": "researcher", "depends_on": []},
-      {"id": "code_models", "description": "...", "agent": "coder", "depends_on": ["research"]},
-      {"id": "review", "description": "...", "agent": "reviewer", "depends_on": ["code_models"]}
-    ]
-  }
-  ```
-- Parse LLM response into DAG structure
-- Validate: all dependencies reference valid task IDs, agent types exist
-- Tests with mock provider: simple plan, complex plan, invalid plan handling
+**4.3 — CSV export**
+- `csv.ts`: convert array of objects to CSV string with proper escaping (commas, quotes, newlines)
+- `ExportButton.svelte`: triggers download with generated filename (page-date.csv)
+- Server endpoint `GET /api/export?type=sales&from=...&to=...`: query DB, stream CSV response
+- DataTable has inline export button for current view
+- Tests: CSV escaping edge cases, correct headers
 
-**5.3 — DAG executor**
-- `Execute(ctx, dag *DAG, agentFactory AgentFactory) (*ExecutionResult, error)`
-- Get execution layers from topological sort
-- For each layer: run all tasks in parallel (`errgroup` with semaphore)
-- Each task: create agent of specified type, run with task description
-- Collect results per task, update task status
-- If a task fails: mark dependents as blocked, continue independent tasks
-- `ExecutionResult`: per-task results, total duration, success/failure counts
-- Tests: sequential execution, parallel execution, failure propagation, timeout
+### Phase 5: Testing & Polish
 
-### Phase 6: Supervisor & Synthesis
+**5.1 — Unit tests**
+- CSV serializer: special characters, empty fields, large datasets
+- Formatters: currency, percentage, dates, relative time
+- Auth: password hashing, session validation, expiry
+- Chart options: dark mode color switching
 
-**6.1 — Supervisor agent**
-- `Supervisor` struct: planner, executor, synthesizer, config
-- `Run(ctx, task string) (*SupervisorResult, error)`:
-  1. Call planner to decompose task into DAG
-  2. Log execution plan
-  3. Call executor to run DAG
-  4. Call synthesizer to merge results
-  5. Return final synthesized output
-- Pass shared memory to all sub-agents for collaboration
-- Tests: full flow with mock provider (scripted planning + execution responses)
+**5.2 — E2E tests (Playwright)**
+- Login flow: valid credentials → dashboard, invalid → error message
+- Dashboard navigation: sidebar links load correct pages
+- Dark mode toggle: persists across page navigation
+- CSV export: downloads file with correct content
+- SSE: System Health page receives live updates
 
-**6.2 — Result synthesizer**
-- `Synthesize(ctx, task string, results map[string]*AgentResult, provider Provider) (string, error)`
-- Send all sub-task results to LLM with synthesis prompt
-- Synthesis prompt: "Given the original task and these sub-agent results, produce the final comprehensive output"
-- Format results clearly for the LLM (task description + agent output for each)
-- Tests: synthesis produces coherent output, handles partial failures
+**5.3 — Utility components**
+- `format.ts`: `formatCurrency`, `formatPercent`, `formatDate`, `formatRelativeTime`, `formatNumber`
+- Error pages: custom `+error.svelte` with friendly message and retry
+- Loading states: every page has skeleton while data loads
 
-**6.3 — Observability**
-- Structured logger: `slog` with JSON output
-- Log events: `agent_start`, `agent_complete`, `tool_call`, `tool_result`, `plan_created`, `task_started`, `task_completed`, `task_failed`
-- Each event includes: timestamp, agent name, duration, token usage
-- Execution trace: collect all events into a timeline, printable summary
-- Tests: events logged correctly, trace reconstruction
+**5.4 — README**
+- Screenshot of dashboard (light + dark mode)
+- Features list with icons
+- Quick start: `npm install && npm run seed && npm run dev`
+- Architecture overview: SvelteKit routing, form actions, SSE pattern
+- Tech stack table
+- Environment variables reference
+- Development commands
 
-### Phase 7: CLI & Examples
-
-**7.1 — CLI with cobra**
-- `agentforge run <task>` — run supervisor with task
-  - `--config` — config directory (default `./config/`)
-  - `--provider` — override default provider
-  - `--model` — override default model
-  - `--verbose` — show detailed execution trace
-  - `--output-dir` — directory for generated files (default `./output/`)
-- `agentforge agents list` — list configured agents with tools
-- `agentforge tools list` — list registered tools with schemas
-- `agentforge config validate <dir>` — validate config files
-- Live output during execution: agent status, tool calls, progress
-
-**7.2 — Example programs**
-- `simple/main.go`: single researcher agent answers a question
-- `code-task/main.go`: multi-agent code generation (plan → code → review → deliver)
-- `research-report/main.go`: multi-agent research report (research → write → synthesize)
-- Each example is self-contained with inline config (no YAML dependency)
-
-**7.3 — Integration tests**
-- Full supervisor test: task → plan → execute → synthesize with mock provider
-- Multi-agent collaboration test: agents read/write shared memory correctly
-- DAG execution test: parallel tasks run concurrently, dependencies respected
-- Failure handling test: sub-agent failure doesn't crash supervisor
-- Config loading test: YAML files parse and validate correctly
-
-### Phase 8: Documentation & Polish
-
-**8.1 — YAML config files**
-- `config/agents.yaml`: all 4 agent types with realistic system prompts
-- `config/tools.yaml`: all tools with JSON Schema parameter definitions
-- `config/providers.yaml`: provider configs with env var references for API keys
-
-**8.2 — README**
-- Architecture diagram (supervisor flow)
-- Quick start: `go build && agentforge run "Build a REST API"`
-- Agent types table with descriptions
-- Tool reference table
-- Configuration guide (YAML format)
-- CLI usage with examples
-- How to add custom agents and tools
-- Example execution output (the full CLI output shown above)
-- Design decisions: why no LangChain, why DAG, why shared memory
-
-**8.3 — Final checks**
-- `go build ./...` clean
-- `go test -race ./...` all pass
-- `golangci-lint run` clean
-- CLI: `agentforge run`, `agentforge agents list`, `agentforge tools list` all work
-- Config validation catches errors
-- Example programs run with mock provider
+**5.5 — Final checks**
+- `npm run build` clean (zero warnings)
+- `npm run test` all pass
+- `npm run test:e2e` all pass
+- `npm run lint` clean
+- `npx tsc --noEmit` passes
+- Responsive on mobile/tablet/desktop
+- Dark mode consistent everywhere
 - No `// TODO` or `// FIXME`
-- Fresh clone → build → run (with mock) works
+- Fresh clone → install → seed → dev works
 
 ---
 
 ## Commit Plan
 
-1. `chore: scaffold project with directory structure and config`
-2. `feat: add core types — Message, ToolCall, SubTask, AgentConfig`
-3. `feat: add YAML configuration loader with validation`
-4. `feat: add LLM provider interface and mock provider`
-5. `feat: add OpenAI provider with function calling and streaming`
-6. `feat: add Anthropic provider with tool_use support`
-7. `feat: add Ollama provider for local models`
-8. `feat: add conversation history with token budget trimming`
-9. `feat: add tool interface, registry, and JSON Schema definitions`
-10. `feat: add built-in tools — web search, code gen, code review, text gen`
-11. `feat: add file tools — read and write with sandboxing`
-12. `feat: add shared memory store with agent attribution`
-13. `feat: add memory read/write tools`
-14. `feat: add core agent execution loop with max iterations`
-15. `feat: add specialized agent constructors (researcher, coder, reviewer, writer)`
-16. `feat: add DAG data structure with topological sort and cycle detection`
-17. `feat: add task planner — decompose task into sub-task DAG via LLM`
-18. `feat: add DAG executor with parallel execution and failure handling`
-19. `feat: add supervisor agent with plan-execute-synthesize flow`
-20. `feat: add result synthesizer for merging sub-agent outputs`
-21. `feat: add structured logging and execution trace`
-22. `feat: add CLI with cobra — run, agents list, tools list, config validate`
-23. `feat: add example programs — simple, code-task, research-report`
-24. `test: add integration tests for full supervisor flow`
-25. `feat: add YAML config files for agents, tools, and providers`
-26. `docs: add README with architecture, configuration, and usage guide`
-27. `chore: final lint pass and cleanup`
+1. `chore: scaffold SvelteKit project with Svelte 5, Tailwind, Vitest, Playwright`
+2. `feat: add Drizzle ORM schema and SQLite database setup`
+3. `feat: add seed script with demo sales, metrics, and user data`
+4. `feat: add cookie-based authentication with session management`
+5. `feat: add login/logout pages with form actions`
+6. `feat: add dashboard layout with sidebar, header, and dark mode`
+7. `feat: add Chart.js wrapper components (line, bar, pie, doughnut)`
+8. `feat: add StatCard and DataTable components`
+9. `feat: add Overview dashboard page with KPI cards and charts`
+10. `feat: add Sales Analytics page with date range filtering`
+11. `feat: add User Metrics page with demographics and retention`
+12. `feat: add System Health page with live metric display`
+13. `feat: add SSE endpoint and real-time client integration`
+14. `feat: add CSV export with server endpoint and download trigger`
+15. `test: add unit tests for CSV, formatters, and auth`
+16. `test: add Playwright E2E tests for login, navigation, and export`
+17. `docs: add README with screenshots, setup, and architecture`
+18. `chore: final lint pass and cleanup`
