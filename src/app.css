@@ -1,0 +1,56 @@
+@import 'tailwindcss';
+
+@theme {
+	--color-bg: #f8fafc;
+	--color-surface: #ffffff;
+	--color-surface-alt: #f1f5f9;
+	--color-border: #e2e8f0;
+	--color-text: #0f172a;
+	--color-text-muted: #64748b;
+	--color-primary: #3b82f6;
+	--color-primary-hover: #2563eb;
+	--color-success: #22c55e;
+	--color-warning: #f59e0b;
+	--color-danger: #ef4444;
+	--color-chart-1: #3b82f6;
+	--color-chart-2: #22c55e;
+	--color-chart-3: #f59e0b;
+	--color-chart-4: #ef4444;
+	--color-chart-5: #8b5cf6;
+}
+
+html.dark {
+	--color-bg: #0f172a;
+	--color-surface: #1e293b;
+	--color-surface-alt: #334155;
+	--color-border: #475569;
+	--color-text: #f1f5f9;
+	--color-text-muted: #94a3b8;
+	--color-primary: #60a5fa;
+	--color-primary-hover: #3b82f6;
+	--color-success: #4ade80;
+	--color-warning: #fbbf24;
+	--color-danger: #f87171;
+	--color-chart-1: #60a5fa;
+	--color-chart-2: #4ade80;
+	--color-chart-3: #fbbf24;
+	--color-chart-4: #f87171;
+	--color-chart-5: #a78bfa;
+}
+
+body {
+	background-color: var(--color-bg);
+	color: var(--color-text);
+	font-family:
+		system-ui,
+		-apple-system,
+		sans-serif;
+	margin: 0;
+}
+
+* {
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease,
+		border-color 0.2s ease;
+}
