@@ -1,5 +1,7 @@
 # SvelteFlow — Analytics Dashboard
 
+[![CI](https://github.com/devaloi/svelteflow/actions/workflows/ci.yml/badge.svg)](https://github.com/devaloi/svelteflow/actions/workflows/ci.yml)
+
 An analytics dashboard built with SvelteKit — SSR with streaming, real-time data via Server-Sent Events, form actions for mutations, Chart.js visualizations, and a responsive multi-page UI.
 
 ## Features
